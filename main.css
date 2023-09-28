@@ -1,0 +1,30 @@
+.header-image {
+    height: 200px;
+}
+
+.myname {
+    font-family: Tahoma;
+}
+
+a {
+    font-weight: bold;
+    text-decoration: none;
+}
+
+a:hover {
+    color: darkred;
+    text-decoration: none;
+}
+
+.roman-list {
+    list-style-type: upper-roman;
+}
+
+ul {
+    list-style: square;
+}
+
+th {
+    color: green;
+    background-color: black;
+}

@@ -6,8 +6,12 @@ const dateETFormatted = function(){
 }
 
 const timeFormatted = function(){
+    function addZero(i) {            //see osa on lisatud
+        if (i < 10) {i = "0" + i}
+        return i;
+      }   //see osa on lisatud koos all olevate addZerodega
     let timeNow = new Date();
-    return timeET = timeNow.getHours() + ":" + timeNow.getMinutes() + ":" + timeNow.getSeconds();
+    return timeET = addZero(timeNow.getHours()) + ":" + addZero(timeNow.getMinutes()) + ":" + addZero(timeNow.getSeconds());
 }
 
 const timeOfDayET = function(){

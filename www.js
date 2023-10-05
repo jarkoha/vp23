@@ -3,12 +3,16 @@ const url = require("url");
 const path = require("path");
 const fs = require("fs");
 
+const datetimeValue = require("./dateTimeET");
+const semesterInfo = require ("./semesterInfo");
+
 const pageHead = '<!DOCTYPE html>\n<html>\n<head>\n\t<meta charset="utf-8">\n\t<title>Jarl Koha, veebiproge 2023</title><link rel="stylesheet" href="main.css">\n</head>\n<body>';
 const pageBanner = '\n\t<img src="banner.png" alt="Kursuse bänner">';
 const pageBody = '\n\t<h1 class="myname">Jarl Koha</h1>\n\t<p>See veebileht on valminud <a href="https://www.tlu.ee" target="_blank">TLÜ</a> Digitehnoloogiate instituudi informaatika eriala õppetöö raames.\n\t</p>';
+const pageTime = '\n\t<p>Lehe avamise hetkel oli kuupäev ' + datetimeValue.dateETFormatted() + ' ja kellaeg ' + datetimeValue.timeFormatted() + '\n</p>';   
 const pageFoot = '\n\t<hr>\n</body>\n</html>';
 
-const datetimeValue = require("./dateTimeET");
+
 
 http.createServer(function(req, res){    //req = request, res = response/result
     let currentURL = url.parse(req.url, true);
@@ -19,8 +23,11 @@ http.createServer(function(req, res){    //req = request, res = response/result
         res.write(pageBanner);
         res.write(pageBody);
         res.write('\n\t<hr>\n\t<p><a href = "addname">Lisa oma nimi</a></p>');
+        res.write('\n\t<p><a href = "semesterprogress">Semestri kulg</a></p>');
+        res.write('\n\t<p><a href = "tluphoto">Foto</a></p>');
         res.write(pageFoot);
-        res.write('\n<p>Kuupäev on: ' + datetimeValue.dateETFormatted() + '\n\t<br>Kell on: ' + datetimeValue.timeFormatted() + '\n</p>');
+        res.write(pageTime);
+        //res.write('\n<p>Lehe avamise hetkel oli kuupäev ' + datetimeValue.dateETFormatted() + ' ja kellaeg ' + datetimeValue.timeFormatted() + '\n</p>');
         //console.log("Keegi vaatab!");
         return res.end();
     }
@@ -33,7 +40,25 @@ http.createServer(function(req, res){    //req = request, res = response/result
         res.write('\n\t<hr>\n\t<h2>Lisa palun oma nimi</h2>');
         res.write('\n\t<p>Edaspidi lisame siia asju</p>');
         res.write(pageFoot);
-        res.write('\n<p>Kuupäev on ' + datetimeValue.dateETFormatted() + '\n\t<br>Kell on ' + datetimeValue.timeFormatted() + '\n</p>');
+        res.write(pageTime);
+        return res.end();
+    }
+
+    else if (currentURL.pathname === "/semesterprogress"){
+        res.writeHead(200, {"Content-type": "text-html"});
+        res.write(pageHead);
+        res.write(pageBanner);
+        res.write(pageBody);
+        res.write('\n\t<hr>\n\t<h2>Semestri info</h2>');
+        if (semesterInfo.semesterLength() >= semesterInfo.semesterLasted()) {
+            res.write('\n\t<p><meter min="0" max="semesterInfo.semesterLength()" value="semesterInfo.semesterLasted()"></meter><br>');
+        } else {
+            res.write('\n\t\n<p>Tekkis probleem andmete kuvamisel.<br></p>');
+        }
+        res.write(semesterInfo.semesterStatus());
+        res.write('\n\t<p>Edaspidi lisame siia asju</p>');
+        res.write(pageFoot);
+        res.write(pageTime);
         return res.end();
     }
 
@@ -51,6 +76,7 @@ http.createServer(function(req, res){    //req = request, res = response/result
             }
         });
     }
+
     else {
         res.end("Error 404");
     }

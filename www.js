@@ -11,6 +11,7 @@ const pageBanner = '\n\t<img src="banner.png" alt="Kursuse bänner">';
 const pageBody = '\n\t<h1 class="myname">Jarl Koha</h1>\n\t<p>See veebileht on valminud <a href="https://www.tlu.ee" target="_blank">TLÜ</a> Digitehnoloogiate instituudi informaatika eriala õppetöö raames.\n\t</p>';
 const pageTime = '\n\t<p>Lehe avamise hetkel oli kuupäev ' + datetimeValue.dateETFormatted() + ' ja kellaeg ' + datetimeValue.timeFormatted() + '\n</p>';   
 const pageFoot = '\n\t<hr>\n</body>\n</html>';
+    const tluPhoto = '\n\t<img src="tlu_38.jpg" alt="TLU foto">'
 
 
 
@@ -51,12 +52,22 @@ http.createServer(function(req, res){    //req = request, res = response/result
         res.write(pageBody);
         res.write('\n\t<hr>\n\t<h2>Semestri info</h2>');
         if (semesterInfo.semesterLength() >= semesterInfo.semesterLasted()) {
-            res.write('\n\t<p><meter min="0" max="semesterInfo.semesterLength()" value="semesterInfo.semesterLasted()"></meter><br>');
+            res.write('\n\t<p><meter min="0" max=' + semesterInfo.semesterLength() + ' value=' + semesterInfo.semesterLasted()+ '></meter><br>');
         } else {
             res.write('\n\t\n<p>Tekkis probleem andmete kuvamisel.<br></p>');
         }
         res.write(semesterInfo.semesterStatus());
-        res.write('\n\t<p>Edaspidi lisame siia asju</p>');
+        //res.write('\n\t<p>Edaspidi lisame siia asju</p>');
+        res.write(pageFoot);
+        res.write(pageTime);
+        return res.end();
+    }
+
+    else if (currentURL.pathname === "/tluphoto"){
+        res.writeHead(200, {"Content-type": "text-html"});
+        res.write(pageHead);
+        res.write(tluPhoto);
+        res.write(pageBody);
         res.write(pageFoot);
         res.write(pageTime);
         return res.end();
@@ -72,6 +83,21 @@ http.createServer(function(req, res){    //req = request, res = response/result
             }
             else {
                 res.writeHead(200, {"Content-type": "image/png"});
+                res.end(data);
+            }
+        });
+    }
+
+    else if (currentURL.pathname === "/tlu_38.jpg"){
+        console.log("Tahame pilti.");
+        let tluPhotoPath = path.join(__dirname, "public", "tluphotos/");
+        console.log(tluPhotoPath + currentURL.pathname);
+        fs.readFile(tluPhotoPath + currentURL.pathname, (err, data)=>{
+            if (err) {
+                throw err;
+            }
+            else {
+                res.writeHead(200, {"Content-type": "image/jpg"});
                 res.end(data);
             }
         });

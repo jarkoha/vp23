@@ -6,6 +6,7 @@ const fs = require("fs");
 const querystring = require('querystring');
 const datetimeValue = require("./dateTimeET");
 const semesterInfo = require ("./semesterInfo");
+const dateENGValue = require("./dateTimeENG");
 
 const pageHead = '<!DOCTYPE html>\n<html>\n<head>\n\t<meta charset="utf-8">\n\t<title>Jarl Koha, veebiproge 2023</title><link rel="stylesheet" href="main.css">\n</head>\n<body>';
 const pageBanner = '\n\t<img src="banner.png" alt="Kursuse bänner">';
@@ -22,13 +23,13 @@ http.createServer(function(req, res){    //req = request, res = response/result
     if(req.method === 'POST'){
         //res.end('Tuligi POST');
 		collectRequestData(req, result => {
-            console.log(result);
+            //console.log(result);
             //kirjutame andmeid tekstifaili
             fs.open('public/log.txt','a', (err, file)=>{
                 if (err) {
                     throw err;
                 } else {
-                    fs.appendFile('public/log.txt', result.firstNameInput + ';', (err)=> {
+                    fs.appendFile('public/log.txt', result.firstNameInput + ',' + result.lastNameInput + ',' + dateENGValue.dateENGFormatted() + ';', (err)=> {
                         if (err) {
                             throw err;
                         } else {
@@ -54,6 +55,7 @@ http.createServer(function(req, res){    //req = request, res = response/result
         res.write('\n\t<hr>\n\t<p><a href = "addname">Lisa oma nimi</a></p>');
         res.write('\n\t<p><a href = "semesterprogress">Semestri kulg</a></p>');
         res.write('\n\t<p><a href = "tluphoto">Foto</a></p>');
+        res.write('\n\t<p><a href = "andmed">Andmed</a></p>');
         res.write(pageFoot);
         res.write(pageTime);
         //res.write('\n<p>Lehe avamise hetkel oli kuupäev ' + datetimeValue.dateETFormatted() + ' ja kellaeg ' + datetimeValue.timeFormatted() + '\n</p>');
@@ -68,7 +70,19 @@ http.createServer(function(req, res){    //req = request, res = response/result
         res.write(pageBody);
         res.write('\n\t<hr>\n\t<h2>Lisa palun oma nimi</h2>');
         res.write('<form method="POST">\n\t<lable for="firstNameInput">Eesnimi: </lable>\n\t<input type="text" name="firstNameInput" id="firstnameInput" placeholder="Sinu eesnimi ...">\n\t<br>\n\t<lable for="lastNameInput">Perekonnanimi: </lable> <!--for väärtus on id väärtus >-->\n\t<input type="text" name="lastNameInput" id="lastNameInput" placeholder="Sinu perekonnanimi ...">\n\t<br>\n\t<input type="submit" name="nameSubmit" value="Salvesta">\n\t</form>');
+        res.write('\n\t<p><a href = "/">Esilehele</a></p>');
         res.write(pageFoot);
+        res.write(pageTime);
+        return res.end();
+    }
+
+    else if (currentURL.pathname === "/addnameresult"){
+        res.writeHead(200, {"Content-type": "text-html"});
+        res.write(pageHead);
+        res.write(pageBanner);
+        res.write(pageBody);
+        res.write('\n\t<hr>\n\t<h2>Nimi lisatud!</h2>');
+        res.write('\n\t<p><a href = "/">Esilehele</a></p>');
         res.write(pageTime);
         return res.end();
     }
@@ -85,6 +99,7 @@ http.createServer(function(req, res){    //req = request, res = response/result
             res.write('\n\t\n<p>Tekkis probleem andmete kuvamisel.<br></p>');
         }
         res.write(semesterInfo.semesterStatus());
+        res.write('\n\t<p><a href = "/">Esilehele</a></p>');
         //res.write('\n\t<p>Edaspidi lisame siia asju</p>');
         res.write(pageFoot);
         res.write(pageTime);
@@ -111,6 +126,25 @@ http.createServer(function(req, res){    //req = request, res = response/result
                 //console.log(htmlOut);
                 //console.log(listOutput);
                 tluPhotoPage(res, htmlOut, listOutput);
+            }
+        });
+    }
+
+    else if (currentURL.pathname === "/andmed"){
+        //loeme kataloogist fotode nimekirja ja loosime ühe pildi
+        let listAndmedOut = '';
+        fs.readFile('public/log.txt', "utf-8", (err, data) =>{
+            if (err) {
+                throw err;
+                andmedPage(res, listAndmedOut);
+            } else {
+                let allData = data.split(";");
+                listAndmedOut = '\n\t<ul>';
+                for (let i = 0; i < allData.length; i++){
+                    listAndmedOut += '\n\t\t<li>' + allData[i] + '</li>';
+                }
+                listAndmedOut += '\n\t</ul>';
+                andmedPage(res, listAndmedOut);
             }
         });
     }
@@ -161,6 +195,21 @@ function tluPhotoPage(res, htmlOut, listOutput) {
     if (listOutput != '') {
         res.write(listOutput);
     }
+    res.write('\n\t<p><a href = "/">Esilehele</a></p>');
+    res.write(pageFoot);
+    res.write(pageTime);
+    return res.end();
+}
+
+function andmedPage(res, listAndmedOut) {
+    res.writeHead(200, {"Content-type": "text-html"});
+    res.write(pageHead);
+    res.write(pageBanner);
+    res.write(pageBody);
+    if (listAndmedOut != '') {
+        res.write(listAndmedOut);
+    }
+    res.write('\n\t<p><a href = "/">Esilehele</a></p>');
     res.write(pageFoot);
     res.write(pageTime);
     return res.end();

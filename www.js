@@ -23,27 +23,33 @@ http.createServer(function(req, res){    //req = request, res = response/result
     if(req.method === 'POST'){
         //res.end('Tuligi POST');
 		collectRequestData(req, result => {
+            let notice = '<p>Sisestatud andmetega tehti midagi!</p>';
             //console.log(result);
             //kirjutame andmeid tekstifaili
             fs.open('public/log.txt','a', (err, file)=>{
                 if (err) {
                     throw err;
+                    nameAddedNotice(res, noptice);
                 } else {
                     fs.appendFile('public/log.txt', result.firstNameInput + ',' + result.lastNameInput + ',' + dateENGValue.dateENGFormatted() + ';', (err)=> {
                         if (err) {
                             throw err;
+                            notice = '<p>Sisestatud andmete salvestamine ebaõnnestus</p>';
+                            nameAddedNotice(res, notice);
                         } else {
                             console.log('Faili kirjutati.')
+                            notice = '<p>Sisestatud andmete salvestamine õnnestus!</p>';
+                            nameAddedNotice(res, notice);
                         }
                     });
-                    fs.close(file, (err) => {
+                    /*fs.close(file, (err) => {
                         if (err) {
                             throw err;
                         }
-                    });
+                    });*/
                 }
             });
-			res.end(result.firstNameInput);
+			//res.end(result.firstNameInput);
 			//res.end('Tuligi POST!');
 		});
     }
@@ -55,7 +61,7 @@ http.createServer(function(req, res){    //req = request, res = response/result
         res.write('\n\t<hr>\n\t<p><a href = "addname">Lisa oma nimi</a></p>');
         res.write('\n\t<p><a href = "semesterprogress">Semestri kulg</a></p>');
         res.write('\n\t<p><a href = "tluphoto">Foto</a></p>');
-        res.write('\n\t<p><a href = "andmed">Andmed</a></p>');
+        res.write('\n\t<p><a href = "andmed">Sisestatud nimed</a></p>');
         res.write(pageFoot);
         res.write(pageTime);
         //res.write('\n<p>Lehe avamise hetkel oli kuupäev ' + datetimeValue.dateETFormatted() + ' ja kellaeg ' + datetimeValue.timeFormatted() + '\n</p>');
@@ -132,13 +138,13 @@ http.createServer(function(req, res){    //req = request, res = response/result
 
     else if (currentURL.pathname === "/andmed"){
         //loeme kataloogist fotode nimekirja ja loosime ühe pildi
-        let listAndmedOut = '';
+        let listAndmedOut = '\n\t<p>Kahjuks ühtegi nime ei leitud</p>';
         fs.readFile('public/log.txt', "utf-8", (err, data) =>{
             if (err) {
                 throw err;
                 andmedPage(res, listAndmedOut);
             } else {
-                let allData = data.split(";");
+                /*let allData = data.split(";");
                 listAndmedOut = '\n\t<ul>';
                 for (let i = 0; i < allData.length; i++){
                     listAndmedOut += '\n\t\t<li>' + allData[i] + '</li>';
@@ -147,7 +153,25 @@ http.createServer(function(req, res){    //req = request, res = response/result
                 andmedPage(res, listAndmedOut);
             }
         });
-    }
+    }*/
+                let allData = data.split(";");
+                let allNames = [];
+				listAndmedOut = '\n\t<ul>';
+				for (person of allData){
+					allNames.push(person.split(',')); 
+				}
+				//console.log(allNames);
+				for (person of allNames){
+					if(person[0]){   //küsib kas masiivi viimasel elemendil on nimi või mitte ja teeb ainult siis list itemi
+						listAndmedOut += '\n\t\t<li>' + person[0] + ' ' + person[1] + ', salvestatud: ' + person[2] + '</li>';
+					}
+				}
+				listAndmedOut += '\n\t</ul>'
+				andmedPage(res, listAndmedOut);
+			}
+		});
+	}
+                
 
     //else if (currentURL.pathname === "/tlu_38.jpg"){
     else if (path.extname(currentURL.pathname) === ".jpg"){
@@ -199,6 +223,20 @@ function tluPhotoPage(res, htmlOut, listOutput) {
     res.write(pageFoot);
     res.write(pageTime);
     return res.end();
+}
+
+function nameAddedNotice(res, notice){
+	res.writeHead(200, {"Content-Type": "text/html"});
+	res.write(pageHead);
+	res.write(pageBanner);
+	res.write(pageBody);
+	res.write('\n\t<h2>Palun lisa oma nimi</h2>');
+	res.write('\n\t' + notice);
+	res.write('\n\t <p><a href="/addname">Sisestame järgmise nime</a>!</p>');
+	res.write('\n\t <p><a href="/">Tagasi avalehele</a>!</p>');
+	res.write(pageFoot);
+	//et see kõik valmiks ja ära saadetaks
+	return res.end();
 }
 
 function andmedPage(res, listAndmedOut) {
